@@ -2,11 +2,13 @@ import itertools
 # K out of K scheme
 # constructs K shares from a black and white image
 
+#returns a list of k elements
+def makeW (k):
+   return [1,2,3,4]
 
 # returns a tuple of pi,sigma as a list based on k
 # credit to: http://pythonfiddle.com/a-list-of-subsets-of-a-list/ 
-def makepi (k):
-   W = [1,2,3,4]
+def makepi (W):
    pi = []
    for i in xrange(0, len(W)+1):
       listing = [list(subset) for subset in itertools.combinations(W, i)]
@@ -15,9 +17,14 @@ def makepi (k):
 
    print(pi)
 
-def makesigma (k):
-   #sigma = [ [1] [2] [3] ]
-   return 0
+def makesigma (W):
+   sigma = []
+   for i in xrange(0, len(W)+1):
+      listing = [list(subset) for subset in itertools.combinations(W, i)]
+      if (len(subset)%2 != 0):
+         sigma.extend(listing)
+
+   print(sigma)
 
 # creates an S0 matrix such that S0 = S0[i,j] = 1 iff ei in pij
 def makeS0 (pi):
@@ -50,4 +57,6 @@ def koutofk ():
 
 ###MAIN###
 #print (makepi(4))
-makepi(4)
+W = makeW(4)
+makepi(W)
+makesigma(W)
