@@ -17,14 +17,14 @@ import itertools
 #returns a list of k elements
 
 """/**
- * MakeW function.
- * 
- * generates the groundset W.
- *
- * @param k the number of elements in the groundset
- * 
- * @return W the groundset
- */"""
+    * MakeW function.
+    * 
+    * generates the groundset W.
+    *
+    * @param k the number of elements in the groundset
+    * 
+    * @return W the groundset
+    */"""
 def makeW (k):
    W = []
    i = 1;
@@ -36,16 +36,16 @@ def makeW (k):
 # returns a tuple of pi,sigma as a list based on k
 # credit to: http://pythonfiddle.com/a-list-of-subsets-of-a-list/ 
 """/**
- * MakePiSigma function.
- * 
- * generates the pi set (the even cardinality set)
- * and the sigma set (the odd cardinality set) from
- * the ground set.
- *
- * @param W the groundset
- * @return the fullset the set with pi and sigma
- *
- */"""
+    * MakePiSigma function.
+    * 
+    * generates the pi set (the even cardinality set)
+    * and the sigma set (the odd cardinality set) from
+    * the ground set.
+    *
+    * @param W the groundset
+    * @return the fullset the set with pi and sigma
+    *
+    */"""
 def makePiSigma (W):
    pi = []
    sigma = []
