@@ -4,7 +4,12 @@ import itertools
 
 #returns a list of k elements
 def makeW (k):
-   return [1,2,3,4]
+   W = []
+   i = 1;
+   while (i <= k):
+      W.append(i)
+      i += 1
+   return W 
 
 # returns a tuple of pi,sigma as a list based on k
 # credit to: http://pythonfiddle.com/a-list-of-subsets-of-a-list/ 
@@ -14,8 +19,7 @@ def makepi (W):
       listing = [list(subset) for subset in itertools.combinations(W, i)]
       if (len(subset)%2 == 0):
          pi.extend(listing)
-
-   print(pi)
+   return(pi)
 
 def makesigma (W):
    sigma = []
@@ -23,12 +27,29 @@ def makesigma (W):
       listing = [list(subset) for subset in itertools.combinations(W, i)]
       if (len(subset)%2 != 0):
          sigma.extend(listing)
+   return(sigma)
 
-   print(sigma)
+def search (target, search_space):
+   for x in search_space:
+      if x == target:
+         return True
+      else:
+         return False
 
 # creates an S0 matrix such that S0 = S0[i,j] = 1 iff ei in pij
-def makeS0 (pi):
-   return 0
+def makeS0 (W, pi):
+   #set size of s0 to be list of lists with sizes k and 2^(k-1)
+   k = len(W)
+   col = pow(2,(k-1))
+   s0 = [[2 for x in range(col)] for y in range(k)]
+   for i in range(len(s0)):
+      for j in range(len(s0[i])):
+         if ( search(W[i],pi[j]) ):
+            s0[i][j] = 1
+         else:
+            s0[i][j] = 0
+   #print("s0 is: " + str(s0))
+
 # creates an S1 matrix such that S1 = S1[i,j] = 1 iff ei in sigmaj
 def makeS1 (sigma): 
    return 0
@@ -56,7 +77,7 @@ def koutofk ():
 
 
 ###MAIN###
-#print (makepi(4))
 W = makeW(4)
-makepi(W)
+pi = makepi(W)
 makesigma(W)
+makeS0(W,pi)
