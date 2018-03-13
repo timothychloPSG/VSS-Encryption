@@ -14,8 +14,6 @@ import itertools
 # K out of K scheme
 # constructs K shares from a black and white image
 
-#returns a list of k elements
-
 """/**
     * MakeW function.
     * 
@@ -55,9 +53,7 @@ def makePiSigma (W):
          pi.extend(listing)
       else:
          sigma.extend(listing)
-
    pi[0] =[0]
-   sigma[0]=[0]
    return([pi, sigma])
 
 """/**
@@ -83,36 +79,22 @@ def search (target, search_space):
     * generates a S0 set.
     *
     * @param W the groundset
-    * @param pi the pi set
+    * @param ps pi or sigma
     * @return nothing yet
     *
     */"""
-def makeS0 (W, pi):
+def makeS (W, ps):
    #set size of s0 to be list of lists with sizes k and 2^(k-1)
    k = len(W)
    col = pow(2,(k-1))
-   s0 = [[2 for x in range(col)] for y in range(k)]
-   for i in range(len(s0)):
-      for j in range(len(s0[i])):
-         if ( search(W[i],pi[j]) ):
-            s0[i][j] = 1
+   s = [[2 for x in range(col)] for y in range(k)]
+   for i in range(len(s)):
+      for j in range(len(s[i])):
+         if ( search(W[i],ps[j]) ):
+            s[i][j] = 1
          else:
-            s0[i][j] = 0
-   print("s0 is: " + str(s0))
-
-# creates an S1 matrix such that S1 = S1[i,j] = 1 iff ei in sigmaj
-"""/**
-    * MakeS1 function.
-    *
-    * make S1 set
-    *
-    * @param sigma the sigma set
-    * @return nothing yet!!
-    *
-    */"""
-def makeS1 (sigma): 
-   return 0
-#given either S0 or S1, randomly permute the matrix 
+            s[i][j] = 0
+   return s
 
 """/**
     * PermuteMatrix function.
@@ -142,14 +124,11 @@ def koutofk ():
    fullset = makePiSigma(W)
    pi = fullset[0]
    sigma = fullset[1]
-   print("pi is: " + str(pi))
-   print("sigma is: " + str(sigma))
-   makeS0(W, pi)
+   # creates an S0 matrix such that S0 = S0[i,j] = 1 iff ei in pij
+   s0 = makeS(W, pi)
+   # creates an S1 matrix such that S1 = S1[i,j] = 1 iff e1 in sigmaj
+   s1 = makeS(W, sigma)
    return 0
-   #sigma,pi = makepisigma k
-   #S0 = makeS0 pi
-   #S1 = makeS1 sigma
-   #initialize k shares
    
    #accept commandline input: kofk.py k k image
 
@@ -163,8 +142,4 @@ def koutofk ():
 
 
 ###MAIN###
-#W = makeW(4)
-#pi = makepi(W)
-#makesigma(W)
-#makeS0(W,pi)
 koutofk()
