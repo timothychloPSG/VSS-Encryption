@@ -11,6 +11,8 @@
  *******************************************/"""
 
 import itertools
+import numpy as np
+import random
 # K out of K scheme
 # constructs K shares from a black and white image
 
@@ -106,7 +108,17 @@ def makeS (W, ps):
     *
     */"""
 def permuteMatrix (matrix):
-  return 0
+   matrix = np.array(matrix)
+   cols = len(matrix[0])
+   for i in range(0,cols):
+      rand1 = random.randint(0,cols-1)
+      rand2 = random.randint(0,cols-1)
+   
+      while(rand1 == rand2 and cols<100):
+         rand1 = random.randint(0,cols-1)
+         rand2 = random.randint(0,cols-1)
+      matrix[:,[rand1,rand2]] = matrix[:,[rand2,rand1]]
+   return matrix
 
 # "main" for k out of k
 
@@ -128,6 +140,12 @@ def koutofk ():
    s0 = makeS(W, pi)
    # creates an S1 matrix such that S1 = S1[i,j] = 1 iff e1 in sigmaj
    s1 = makeS(W, sigma)
+
+   print("not permuted is:") 
+   print(s1)
+   print("permuted")
+   print(permuteMatrix(s1))
+
    return 0
    
    #accept commandline input: kofk.py k k image
