@@ -15,11 +15,13 @@ parser.add_argument('-o', help = 'output file (if not specified, stdout)', nargs
 parser.add_argument('-p', help = 'Print out the bit array', action = 'store_true', default = False)
 args = parser.parse_args()
 
+
 def image_to_bits(image):
 	print 	"Image info:"
 	print 	"""Number of bits: %d,  Image Size: %s,  Image format: %s""" %(image.bits, image.size, image.format)
 	image.show()
 	return 	list(image.convert("1").getdata())
+
 
 def print_image(image):
 	image.show()
@@ -36,8 +38,9 @@ def print_bit_array(image, data):
 		else:
 			print bit/255,
 
-# Flips bits for KofK peoples (1 is black and 0 is white)
+
 def flip_bits(bits):
+# Flips bits for KofK peoples (1 is black and 0 is white)
 	for x in range(len(bits)):
 		if bits[x] == 255:
 			bits[x] = 0
@@ -45,8 +48,12 @@ def flip_bits(bits):
 			bits[x] = 255
 
 
-if __name__ == '__main__':
+def paste_images(background, foreground):
+# Pastes foreground image on background
+	return Image.alpha_composite(background, foreground).save("stacked-img.png")
 
+
+if __name__ == '__main__':
 	if args.i:
 		inp = Image.open(args.i[0])										# Open image
 		out = image_to_bits(inp)										# Convert to bits
