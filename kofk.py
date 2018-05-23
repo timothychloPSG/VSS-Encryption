@@ -103,8 +103,8 @@ def makeS (W, ps):
     *
     * permuting the matrix.
     *
-    * @param matrix what is the fucking matrix?????
-    * @return nothing yet!!!
+    * @param matrix The matrix to be permuted
+    * @return the column permuted matrix
     *
     */"""
 def permuteMatrix (matrix):
@@ -120,8 +120,6 @@ def permuteMatrix (matrix):
       matrix[:,[rand1,rand2]] = matrix[:,[rand2,rand1]]
    return matrix
 
-# "main" for k out of k
-
 """/**
     * koutofk function.
     *
@@ -132,7 +130,8 @@ def permuteMatrix (matrix):
     *
     */"""
 def koutofk ():
-   W = makeW(4)
+   k = 4
+   W = makeW(k)
    fullset = makePiSigma(W)
    pi = fullset[0]
    sigma = fullset[1]
@@ -140,23 +139,25 @@ def koutofk ():
    s0 = makeS(W, pi)
    # creates an S1 matrix such that S1 = S1[i,j] = 1 iff e1 in sigmaj
    s1 = makeS(W, sigma)
-
-   print("not permuted is:") 
-   print(s1)
-   print("permuted")
-   print(permuteMatrix(s1))
-
    return 0
    
    #accept commandline input: kofk.py k k image
+   fakepic = [[0,1,0],[1,0,0],[1,0,1],[1,1,1]]
 
-   #for prow in range(image):
-   #   for pcol in range(pixelrow):
-   #      if  image[prow,pcol]== 0:
-   #         C0share = permuteMatrix S0
-            #distribute across k shares
+
+
+
+
+   #for prow in range(fakepic):
+   #   for pcol in range(fakepic[prow]):
+   #      if  fakepick[prow][pcol] == 0:
+   #         C0matrix = permuteMatrix(s0)
+   #         #distribute the rows to k shares
+   #         for s in range(0,k):
+   #           share[s][c] = C0matrix[s]
+   #           c = c+1
    #      else:
-   #         C1share = permuteMatrix S1
+   #         C1matrix = permuteMatrix S1
 
 
 ###MAIN###
