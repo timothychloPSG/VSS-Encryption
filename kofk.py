@@ -9,10 +9,11 @@
  *  Part of the CS Makerspace VSS Project.
  *
  *******************************************/"""
-
+from __future__ import print_function
 import itertools
 import numpy as np
 import random
+
 # K out of K scheme
 # constructs K shares from a black and white image
 
@@ -114,9 +115,11 @@ def permuteMatrix (matrix):
       rand1 = random.randint(0,cols-1)
       rand2 = random.randint(0,cols-1)
    
-      while(rand1 == rand2 and cols<100):
-         rand1 = random.randint(0,cols-1)
-         rand2 = random.randint(0,cols-1)
+      #taken out until such time that we decide it should go back in
+      #made the results somewhat more regular but it was a performance overhead
+      # while(rand1 == rand2 and cols<100):
+      #    rand1 = random.randint(0,cols-1)
+      #    rand2 = random.randint(0,cols-1)
       matrix[:,[rand1,rand2]] = matrix[:,[rand2,rand1]]
    return matrix
 
@@ -126,11 +129,11 @@ def permuteMatrix (matrix):
     * the main function for carrying out k out of k
     * image secret splitting.
     *
-    * @return nothing yet???
+    * @return nothing
     *
     */"""
 def koutofk ():
-   k = 4
+   k = 3
    W = makeW(k)
    fullset = makePiSigma(W)
    pi = fullset[0]
@@ -139,10 +142,88 @@ def koutofk ():
    s0 = makeS(W, pi)
    # creates an S1 matrix such that S1 = S1[i,j] = 1 iff e1 in sigmaj
    s1 = makeS(W, sigma)
+
+   #TODO: will probably want to change this to binary writing to reduce size of the file
+   #TODO: will want to make this not firmly based on k=3
+   #   That will involve creating a list of files that are "share" + i and then iterating through said list
+
+   share1 = open("share1", "w")
+   share2 = open("share2", "w")
+   share3 = open("share3", "w")
+
+   fakepic = [[0,1,0,0],[1,0,0,1],[1,1,0,1],[0,0,0,1]]
+   #convert a 2D array to k shares and write those shares to files
+   
+   for line in fakepic:
+      for pixel in line:
+         #choose a permutation randomly of either S0 or S1
+         if pixel == 0:
+            out = permuteMatrix(s0) 
+         else:
+            out = permuteMatrix(s1)
+
+         #distribute the permutation among the shares
+         for subpixel in out[0]:
+            share1.write(str(subpixel))
+         for subpixel in out[1]:
+            share2.write(str(subpixel))
+         for subpixel in out[2]:
+            share3.write(str(subpixel))
+      share1.write("\n")
+      share2.write("\n")
+      share3.write("\n")
+   
+   share1.close()
+   share2.close()
+   share3.close()
+
+   #TODO: this will be moved to some other place but for testing purpose it's here
+   #convert files to shares and then to a picture
+   #TODO: eventually shares will come as arguments and we will need to place them in a list and iterate
+      #though each share
+   share1 = open("share1", "r")
+   num_lines = sum(1 for line in share1) #assume the files are the same sizes (should be anyway)
+   share1.close()
+   share1 = open("share1", "r")
+   share2 = open("share2", "r")
+   share3 = open("share3", "r")
+
+   #compute the length of a individual pixel's share
+   length = 2 << (k-2) #same as 2^(k-1)
+   
+   for i in range(0, num_lines): 
+      line1 = share1.readline()
+      line2 = share2.readline()
+      line3 = share3.readline()
+      
+      line1 = line1[:-1] #slice off the newline character
+      line2 = line2[:-1]
+      line3 = line3[:-1]
+
+      beg = 0 #The first digit of a share
+      while beg < len(line1):
+         white = False
+         for x in range(beg, beg + length):
+            if (line1[x] == '0') and (line2[x] == '0') and (line3[x] == '0'):
+               white = True
+         #print results out to console
+            #Prints out in as 0 or 1 in the place where that pixel would be in the image
+            #ie 100
+            #   011
+            #   101
+            #for a image that is 3x3 pixels
+         #TODO: for generating the image, what is the proper format?
+         if(white):
+            print("0", end=" ")
+         else:
+            print("1", end=" ")
+         beg += length
+      print()
+
    return 0
    
    #accept commandline input: kofk.py k k image
-   fakepic = [[0,1,0],[1,0,0],[1,0,1],[1,1,1]]
+   
 
 
 
