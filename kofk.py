@@ -13,6 +13,7 @@ from __future__ import print_function
 import itertools
 import numpy as np
 import random
+import time
 
 # K out of K scheme
 # constructs K shares from a black and white image
@@ -132,8 +133,7 @@ def permuteMatrix (matrix):
     * @return nothing
     *
     */"""
-def koutofk ():
-   k = 3
+def koutofk (k):
    W = makeW(k)
    fullset = makePiSigma(W)
    pi = fullset[0]
@@ -144,84 +144,93 @@ def koutofk ():
    s1 = makeS(W, sigma)
 
    #TODO: will probably want to change this to binary writing to reduce size of the file
-   #TODO: will want to make this not firmly based on k=3
-   #   That will involve creating a list of files that are "share" + i and then iterating through said list
+   # startTime = time.time()
+   shares = [object] * k
+   for i in range(0, k):
+      shares[i] = open("share" + str(i), "w")
 
-   share1 = open("share1", "w")
-   share2 = open("share2", "w")
-   share3 = open("share3", "w")
+   # print("Creating files took:", time.time() - startTime)
 
-   fakepic = [[0,1,0,0],[1,0,0,1],[1,1,0,1],[0,0,0,1]]
+   fakepic = [[0,1,0,0],[1,0,0,1],[1,1,0,1],[0,0,0,1],[1,1,0,0],[1,0,1,0],[1,1,1,1],[0,1,1,0]]
    #convert a 2D array to k shares and write those shares to files
-   
+   # startTime = time.time()
+
    for line in fakepic:
       for pixel in line:
+         # pixelTime = time.time()
          #choose a permutation randomly of either S0 or S1
+         # matrixTime = time.time()
          if pixel == 0:
-            out = permuteMatrix(s0) 
+            out = permuteMatrix(s0)
          else:
             out = permuteMatrix(s1)
-
+         # print("time to permutate:", time.time() - matrixTime)
          #distribute the permutation among the shares
-         for subpixel in out[0]:
-            share1.write(str(subpixel))
-         for subpixel in out[1]:
-            share2.write(str(subpixel))
-         for subpixel in out[2]:
-            share3.write(str(subpixel))
-      share1.write("\n")
-      share2.write("\n")
-      share3.write("\n")
-   
-   share1.close()
-   share2.close()
-   share3.close()
+         for i in range(0, k):
+            for subpixel in out[i]:
+               shares[i].write(str(subpixel))
+      for i in range(0, k):
+         shares[i].write("\n")
+      # print("time for one pixel:", time.time() - pixelTime)
+   for i in range(0, k):
+      shares[i].close()
 
-   #TODO: this will be moved to some other place but for testing purpose it's here
-   #convert files to shares and then to a picture
-   #TODO: eventually shares will come as arguments and we will need to place them in a list and iterate
-      #though each share
-   share1 = open("share1", "r")
-   num_lines = sum(1 for line in share1) #assume the files are the same sizes (should be anyway)
-   share1.close()
-   share1 = open("share1", "r")
-   share2 = open("share2", "r")
-   share3 = open("share3", "r")
+   # print("Creating shares took:", time.time() - startTime)
+  
+   return 0
+
+def toShares(k):
+   #TODO: eventually shares will come as arguments
+   # startTime = time.time()
+   share = open("share0", "r")
+   num_lines = sum(1 for line in share) #assume the files are the same sizes (should be anyway)
+   share.close()
+
+   for i in range(0, k):
+      shares[i] = open("share" + str(i), "r")
 
    #compute the length of a individual pixel's share
    length = 2 << (k-2) #same as 2^(k-1)
-   
+   print("num_lines", num_lines)
+   num_pixels = len(shares[0].readline())/length
+   shares[0].seek(0,0)
+   Matrix = [[0] * num_pixels for x in range(num_lines)]
    for i in range(0, num_lines): 
-      line1 = share1.readline()
-      line2 = share2.readline()
-      line3 = share3.readline()
-      
-      line1 = line1[:-1] #slice off the newline character
-      line2 = line2[:-1]
-      line3 = line3[:-1]
+      lines = [object] * k
+      for x in range(0, k):
+         lines[x] = shares[x].readline()
+         lines[x] = lines[x][:-1] #slice off the newline character of the line
 
       beg = 0 #The first digit of a share
-      while beg < len(line1):
-         white = False
+      
+      while beg < len(lines[0]):
+         white=False
          for x in range(beg, beg + length):
-            if (line1[x] == '0') and (line2[x] == '0') and (line3[x] == '0'):
-               white = True
+            #if there's a single matching of all white subpixels than the pixel must be white
+            w = True
+            for line in lines:
+               if line[x] != "0":
+                  w = False
+            if w:
+               white=True
          #print results out to console
             #Prints out in as 0 or 1 in the place where that pixel would be in the image
-            #ie 100
-            #   011
-            #   101
+            #ie 
+            #  100
+            #  011
+            #  101
             #for a image that is 3x3 pixels
-         #TODO: for generating the image, what is the proper format?
+         #TODO: for generating the image, what is the proper format? -> 2D array
+         print(i, beg/length, end="")
          if(white):
-            print("0", end=" ")
+            Matrix[i][beg/length] = 0
+            print("-> 0")
          else:
-            print("1", end=" ")
+            Matrix[i][beg/length] = 1
+            print("-> 1")
          beg += length
-      print()
-
-   return 0
-   
+   # print("Shares -> pixels took:", time.time() - startTime)
+   return Matrix
    #accept commandline input: kofk.py k k image
    
 
@@ -242,4 +251,5 @@ def koutofk ():
 
 
 ###MAIN###
-koutofk()
+k = 3
+koutofk(k)
