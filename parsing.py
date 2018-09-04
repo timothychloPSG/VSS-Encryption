@@ -1,33 +1,34 @@
 import sys
 import argparse
 import numpy
-import os 
-import io 
+import os
+import io
 import scipy.misc
 from array import array
 from PIL import Image
+import kofk
 
 parser = argparse.ArgumentParser(description = 'Runs VSS-encryption')
-#parser.add_argument('-e', help = 'encrypt', action = 'store_true', default = False)
-#parser.add_argument('-d', help = 'decrypt', action = 'store_true', default = False)
-parser.add_argument('-i', help = 'input file', nargs = 1)
-parser.add_argument('-o', help = 'output file (if not specified, stdout)', nargs = 1)
-parser.add_argument('-p', help = 'Print out the bit array', action = 'store_true', default = False)
+parser.add_argument('-s', help = 'split', action = 'store_true', default = False)
+parser.add_argument('-r', help = 'reconstruct', action = 'store_true', default = False)
+parser.add_argument('-i', help = 'input files', nargs = '+')
+parser.add_argument('-o', help = 'output files (if not specified, stdout)', nargs = '+')
+# parser.add_argument('-p', help = 'Print out the bit array', action = 'store_true', default = False)
 args = parser.parse_args()
 
 
 def image_to_bits(image):
 	print 	"Image info:"
 	print 	"""Number of bits: %d,  Image Size: %s,  Image format: %s""" %(image.bits, image.size, image.format)
-	image.show()
+	# image.show()
 	return 	list(image.convert("1").getdata())
 
 
 def print_image(image):
 	image.show()
-	
 
-def print_bit_array(image, data):	
+
+def print_bit_array(image, data):
 	count = 0
 	for bit in data:
 		count += 1
@@ -52,21 +53,59 @@ def paste_images(background, foreground):
 # Pastes foreground image on background
 	return Image.alpha_composite(background, foreground).save("stacked-img.png")
 
+def from_2D_to_img(Matrix):
+	for row in range(len(Matrix)):
+		for pixel in range(len(Matrix[row])):
+			if Matrix[row][pixel] == 0:
+				Matrix[row][pixel] = 255
+			elif Matrix[row][pixel] == 1:
+				Matrix[row][pixel] = 0
+
+def make_2D_array(data,ratio):
+	print ratio[0],ratio[1]
+	Matrix = [[0 for x in range(ratio[0])] for y in range(ratio[1])]
+	x,y = 0,0
+	for datum in data:
+		Matrix[y][x] = datum % 2 #This is so 0 maps to 0 and 255 maps to 1
+		x = (x+1) % ratio[0]
+		if x == 0:
+			y = (y+1) % ratio[1]
+	return Matrix
+
 
 if __name__ == '__main__':
-	if args.i:
-		inp = Image.open(args.i[0])										# Open image
-		out = image_to_bits(inp)										# Convert to bits
-		flip_bits(out)
-		if args.p:														# Print the bit array
-			print_bit_array(inp, out) 									
-		data = numpy.array(out).reshape(inp.size[0], inp.size[1])		# Convert bits to image
-		if args.o: 
-			scipy.misc.imsave(args.o[0], data)							# Save the file
-		else:
-			scipy.misc.imsave("output.jpg", data)						# Print file to stdout
-			inp = Image.open("output.jpg")
-			print_image(inp)
+
+	inp = Image.open(args.i[0])										# Open image
+	out = image_to_bits(inp)										# Convert to bits
+	flip_bits(out)
+	Matrix = make_2D_array(out,inp.size)
+	kofk.koutofk(3,Matrix)
+	outMatrix = kofk.toShares(3)
+	from_2D_to_img(outMatrix)
+	scipy.misc.imsave('lawrence1.jpg', outMatrix)
+	# if args.s:
+	# 	inp = Image.open(args.i[0])										# Open image
+	# 	out = image_to_bits(inp)										# Convert to bits
+	# 	flip_bits(out)
+	# 	Matrix = make_2D_array(out,inp.size)
+
+
+	# 	#kofk stuff goes here
+	# if args.r:
+	# 	for
+	# 	flip_bits(out)
+	# 	Matrix = make_2D_array(out,inp.size)
+	# 	from_2D_to_img(Matrix)
+	# 	scipy.misc.imsave('lawrence1.png', Matrix)
+		# if args.p:														# Print the bit array
+		# 	print_bit_array(inp, out)
+		# data = numpy.array(out).reshape(inp.size[0], inp.size[1])		# Convert bits to image
+		# if args.o:
+		# 	scipy.misc.imsave(args.o[0], data)							# Save the file
+		# else:
+		# 	scipy.misc.imsave("output.jpg", data)						# Print file to stdout
+		# 	inp = Image.open("output.jpg")
+		# 	print_image(inp)
 
 
 	# if args.i and args.o:
@@ -76,5 +115,5 @@ if __name__ == '__main__':
 	# 	stackImages(inp, out)
 
 
-		
+
 

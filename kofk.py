@@ -1,11 +1,11 @@
 """/*******************************************
  *
  * K out of K Scheme. ( For now. )
- * 
+ *
  *
  *  Made by Swagbrina, Superbrina, Romeo.
  *  Supervised by Matthew Rhea.
- *  
+ *
  *  Part of the CS Makerspace VSS Project.
  *
  *******************************************/"""
@@ -20,11 +20,11 @@ import time
 
 """/**
     * MakeW function.
-    * 
+    *
     * generates the groundset W.
     *
     * @param k the number of elements in the groundset
-    * 
+    *
     * @return W the groundset
     */"""
 def makeW (k):
@@ -33,13 +33,13 @@ def makeW (k):
    while (i <= k):
       W.append(i)
       i += 1
-   return W 
+   return W
 
 # returns a tuple of pi,sigma as a list based on k
-# credit to: http://pythonfiddle.com/a-list-of-subsets-of-a-list/ 
+# credit to: http://pythonfiddle.com/a-list-of-subsets-of-a-list/
 """/**
     * MakePiSigma function.
-    * 
+    *
     * generates the pi set (the even cardinality set)
     * and the sigma set (the odd cardinality set) from
     * the ground set.
@@ -66,8 +66,8 @@ def makePiSigma (W):
     * search through the given
     * set for the search target.
     *
-    * @param search_space 
-    * @retun bool value according to the 
+    * @param search_space
+    * @retun bool value according to the
     *
     */"""
 def search (target, search_space):
@@ -115,7 +115,7 @@ def permuteMatrix (matrix):
    for i in range(0,cols):
       rand1 = random.randint(0,cols-1)
       rand2 = random.randint(0,cols-1)
-   
+
       #taken out until such time that we decide it should go back in
       #made the results somewhat more regular but it was a performance overhead
       # while(rand1 == rand2 and cols<100):
@@ -133,7 +133,7 @@ def permuteMatrix (matrix):
     * @return nothing
     *
     */"""
-def koutofk (k):
+def koutofk (k, Matrix):
    W = makeW(k)
    fullset = makePiSigma(W)
    pi = fullset[0]
@@ -150,12 +150,10 @@ def koutofk (k):
       shares[i] = open("share" + str(i), "w")
 
    # print("Creating files took:", time.time() - startTime)
-
-   fakepic = [[0,1,0,0],[1,0,0,1],[1,1,0,1],[0,0,0,1],[1,1,0,0],[1,0,1,0],[1,1,1,1],[0,1,1,0]]
    #convert a 2D array to k shares and write those shares to files
    # startTime = time.time()
 
-   for line in fakepic:
+   for line in Matrix:
       for pixel in line:
          # pixelTime = time.time()
          #choose a permutation randomly of either S0 or S1
@@ -176,33 +174,33 @@ def koutofk (k):
       shares[i].close()
 
    # print("Creating shares took:", time.time() - startTime)
-  
+
    return 0
 
-def toShares(k):
+def toImage(k):
    #TODO: eventually shares will come as arguments
    # startTime = time.time()
    share = open("share0", "r")
    num_lines = sum(1 for line in share) #assume the files are the same sizes (should be anyway)
    share.close()
-
+   shares = [object] * k
    for i in range(0, k):
       shares[i] = open("share" + str(i), "r")
 
    #compute the length of a individual pixel's share
    length = 2 << (k-2) #same as 2^(k-1)
-   print("num_lines", num_lines)
+   # print("num_lines", num_lines)
    num_pixels = len(shares[0].readline())/length
    shares[0].seek(0,0)
    Matrix = [[0] * num_pixels for x in range(num_lines)]
-   for i in range(0, num_lines): 
+   for i in range(0, num_lines):
       lines = [object] * k
       for x in range(0, k):
          lines[x] = shares[x].readline()
          lines[x] = lines[x][:-1] #slice off the newline character of the line
 
       beg = 0 #The first digit of a share
-      
+
       while beg < len(lines[0]):
          white=False
          for x in range(beg, beg + length):
@@ -215,24 +213,24 @@ def toShares(k):
                white=True
          #print results out to console
             #Prints out in as 0 or 1 in the place where that pixel would be in the image
-            #ie 
+            #ie
             #  100
             #  011
             #  101
             #for a image that is 3x3 pixels
          #TODO: for generating the image, what is the proper format? -> 2D array
-         print(i, beg/length, end="")
+         # print(i, beg/length, end="")
          if(white):
             Matrix[i][beg/length] = 0
-            print("-> 0")
+            # print("-> 0")
          else:
             Matrix[i][beg/length] = 1
-            print("-> 1")
+            # print("-> 1")
          beg += length
    # print("Shares -> pixels took:", time.time() - startTime)
    return Matrix
    #accept commandline input: kofk.py k k image
-   
+
 
 
 
@@ -252,4 +250,6 @@ def toShares(k):
 
 ###MAIN###
 k = 3
-koutofk(k)
+Matrix = [[0,1,1,1],[0,1,1,0],[0,1,0,1],[1,0,0,0]]
+koutofk(k, Matrix)
+print(toImage(k))
