@@ -167,15 +167,75 @@ def koutofk (k, Matrix):
          for i in range(0, k):
             for subpixel in out[i]:
                shares[i].write(str(subpixel))
+         # print("time for one pixel:", time.time() - pixelTime)
       for i in range(0, k):
          shares[i].write("\n")
-      # print("time for one pixel:", time.time() - pixelTime)
    for i in range(0, k):
       shares[i].close()
 
    # print("Creating shares took:", time.time() - startTime)
 
    return 0
+
+def koutofk_to3D_Matrix(k, Matrix):
+   if  k % 2 == 0:
+      print("Invalid k:",k)
+      return [[]]
+   W = makeW(k)
+   fullset = makePiSigma(W)
+   pi = fullset[0]
+   sigma = fullset[1]
+   # creates an S0 matrix such that S0 = S0[i,j] = 1 iff ei in pij
+   s0 = makeS(W, pi)
+   # creates an S1 matrix such that S1 = S1[i,j] = 1 iff e1 in sigmaj
+   s1 = makeS(W, sigma)
+
+   #TODO: will probably want to change this to binary writing to reduce size of the file
+   # startTime = time.time()
+   shares = [object] * k
+   for i in range(0, k):
+      shares[i] = open("share" + str(i), "w")
+
+   # print("Creating files took:", time.time() - startTime)
+   #convert a 2D array to k shares and write those shares to files
+   # startTime = time.time()
+   side_len = 2 << (k-3) #(2^(k-1))/2 is the size of a side of a pixel in subpixels
+   pixels = 0
+   for num in Matrix[0]:
+      pixels += 1
+   matrix_width = side_len * pixels #side_length * k^(k-1) * width of picture
+   lines = 0
+   for line in Matrix:
+      lines += 1
+   matrix_depth = side_len * lines
+   outMatrix = [[[0]*matrix_width for x in range(0, matrix_depth)] for y in range(0, k)]
+   doffset = 0
+   for line in Matrix:
+      woffset = 0
+      for pixel in line:
+         # pixelTime = time.time()
+         #choose a permutation randomly of either S0 or S1
+         # matrixTime = time.time()
+         if pixel == 0:
+            out = permuteMatrix(s0)
+         else:
+            out = permuteMatrix(s1)
+         # print("time to permutate:", time.time() - matrixTime)
+         #distribute the permutation among the shares
+         for i in range(0, k):
+            pos = 0
+            for depth in range(doffset, doffset + side_len):
+               for width in range(woffset, woffset + side_len):
+                  #print("i, woffset, depth, width, subpixel:",i,woffset,depth,width,subpixel)
+                  outMatrix[i][depth][width] = out[i][pos]
+                  pos += 1
+         woffset += side_len
+         # print("time for one pixel:", time.time() - pixelTime)
+      doffset += side_len
+
+   # print("Creating shares took:", time.time() - startTime)
+
+   return outMatrix
 
 def toImage(k):
    #TODO: eventually shares will come as arguments
@@ -250,6 +310,15 @@ def toImage(k):
 
 ###MAIN###
 k = 3
-Matrix = [[0,1,1,1],[0,1,1,0],[0,1,0,1],[1,0,0,0]]
-koutofk(k, Matrix)
-print(toImage(k))
+fakepic = [[0,1,1,1],[0,1,1,0],[0,1,0,1],[1,0,0,0]]
+
+# If you want to put shares into an image
+Matrix = koutofk_to3D_Matrix(k, fakepic)
+for share in Matrix:
+   for line in share:
+      print(line)
+   print()
+
+# If you want to put shares in files
+# koutofk(k, fakepic)
+# print(toImage(k))
