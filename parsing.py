@@ -80,7 +80,7 @@ if __name__ == '__main__':
 	flip_bits(out)
 	Matrix = make_2D_array(out,inp.size)
 	kofk.koutofk(3,Matrix)
-	outMatrix = kofk.toShares(3)
+	outMatrix = kofk.toImage(3)
 	from_2D_to_img(outMatrix)
 	scipy.misc.imsave('lawrence1.jpg', outMatrix)
 	# if args.s:
