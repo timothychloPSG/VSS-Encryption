@@ -1,9 +1,9 @@
 import sys
 import argparse
-import numpy
+import numpy as np
 import os
 import io
-import scipy.misc
+from imageio import imwrite
 from array import array
 from PIL import Image
 import kofk
@@ -21,8 +21,21 @@ def image_to_bits(image):
 	print 	"Image info:"
 	print 	"""Number of bits: %d,  Image Size: %s,  Image format: %s""" %(image.bits, image.size, image.format)
 	# image.show()
-	return 	list(image.convert("1").getdata())
+	image = image.convert("L")
+	toBW(image)
+	return np.array(image.convert("1").getdata())
 
+#converts grayscale pixels to pure black and white
+#This is unfortunately necessary (it seems) because image.convert("1") is bugged
+def toBW(image):
+	depth, width = image.size
+	pixels = image.load()
+	for row in range(depth):
+		for pixel in range(width):
+			if pixels[row, pixel] >= 127:
+				pixels[row, pixel] = 255
+			else:
+				pixels[row, pixel] = 0
 
 def print_image(image):
 	image.show()
@@ -56,33 +69,38 @@ def paste_images(background, foreground):
 def from_2D_to_img(Matrix):
 	for row in range(len(Matrix)):
 		for pixel in range(len(Matrix[row])):
-			if Matrix[row][pixel] == 0:
+			if Matrix[row][pixel] == 1:
 				Matrix[row][pixel] = 255
-			elif Matrix[row][pixel] == 1:
-				Matrix[row][pixel] = 0
+			# elif Matrix[row][pixel] == 1:
+			# 	Matrix[row][pixel] = 0
 
 def make_2D_array(data,ratio):
 	print ratio[0],ratio[1]
-	Matrix = [[0 for x in range(ratio[0])] for y in range(ratio[1])]
+	Matrix = np.zeros((ratio[1], ratio[0]), dtype=np.uint8)
 	x,y = 0,0
 	for datum in data:
-		Matrix[y][x] = datum % 2 #This is so 0 maps to 0 and 255 maps to 1
+		Matrix[y][x] = datum + 1 #This is so 0 maps to 0 and 255 maps to 1
 		x = (x+1) % ratio[0]
 		if x == 0:
 			y = (y+1) % ratio[1]
 	return Matrix
 
-
 if __name__ == '__main__':
-
+	# import pdb; pdb.set_trace()
+	k = 3
 	inp = Image.open(args.i[0])										# Open image
 	out = image_to_bits(inp)										# Convert to bits
 	flip_bits(out)
 	Matrix = make_2D_array(out,inp.size)
-	kofk.koutofk(3,Matrix)
-	outMatrix = kofk.toImage(3)
+	shares = kofk.koutofk_to3D_Matrix(k,Matrix)
+	for i in range(k):
+		from_2D_to_img(shares[i])
+		imwrite("share"+str(i)+".jpg", shares[i])
+	outMatrix = kofk.toImage_fr3D(k, shares)
 	from_2D_to_img(outMatrix)
-	scipy.misc.imsave('lawrence1.jpg', outMatrix)
+	imwrite('result.jpg', outMatrix)
+	from_2D_to_img(Matrix)
+	imwrite('beforeShare.jpg', Matrix)
 	# if args.s:
 	# 	inp = Image.open(args.i[0])										# Open image
 	# 	out = image_to_bits(inp)										# Convert to bits
@@ -96,14 +114,14 @@ if __name__ == '__main__':
 	# 	flip_bits(out)
 	# 	Matrix = make_2D_array(out,inp.size)
 	# 	from_2D_to_img(Matrix)
-	# 	scipy.misc.imsave('lawrence1.png', Matrix)
+	# 	imwrite('lawrence1.png', Matrix)
 		# if args.p:														# Print the bit array
 		# 	print_bit_array(inp, out)
 		# data = numpy.array(out).reshape(inp.size[0], inp.size[1])		# Convert bits to image
 		# if args.o:
-		# 	scipy.misc.imsave(args.o[0], data)							# Save the file
+		# 	imwrite(args.o[0], data)							# Save the file
 		# else:
-		# 	scipy.misc.imsave("output.jpg", data)						# Print file to stdout
+		# 	imwrite("output.jpg", data)						# Print file to stdout
 		# 	inp = Image.open("output.jpg")
 		# 	print_image(inp)
 

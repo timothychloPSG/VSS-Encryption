@@ -95,9 +95,9 @@ def makeS (W, ps):
    for i in range(len(s)):
       for j in range(len(s[i])):
          if ( search(W[i],ps[j]) ):
-            s[i][j] = 1
-         else:
             s[i][j] = 0
+         else:
+            s[i][j] = 1
    return s
 
 """/**
@@ -158,7 +158,7 @@ def koutofk (k, Matrix):
          # pixelTime = time.time()
          #choose a permutation randomly of either S0 or S1
          # matrixTime = time.time()
-         if pixel == 0:
+         if pixel == 1:
             out = permuteMatrix(s0)
          else:
             out = permuteMatrix(s1)
@@ -190,25 +190,18 @@ def koutofk_to3D_Matrix(k, Matrix):
    # creates an S1 matrix such that S1 = S1[i,j] = 1 iff e1 in sigmaj
    s1 = makeS(W, sigma)
 
-   #TODO: will probably want to change this to binary writing to reduce size of the file
    # startTime = time.time()
-   shares = [object] * k
-   for i in range(0, k):
-      shares[i] = open("share" + str(i), "w")
-
-   # print("Creating files took:", time.time() - startTime)
-   #convert a 2D array to k shares and write those shares to files
-   # startTime = time.time()
-   side_len = 2 << (k-3) #(2^(k-1))/2 is the size of a side of a pixel in subpixels
+   side_len = 2 << ((k-1)/2) - 1  #(2^(k-1))/2 is the size of a side of a pixel in subpixels
+   #print(side_len)
    pixels = 0
-   for num in Matrix[0]:
+   for pixel in Matrix[0]:
       pixels += 1
    matrix_width = side_len * pixels #side_length * k^(k-1) * width of picture
    lines = 0
    for line in Matrix:
       lines += 1
    matrix_depth = side_len * lines
-   outMatrix = [[[0]*matrix_width for x in range(0, matrix_depth)] for y in range(0, k)]
+   outMatrix = np.zeros((k, matrix_depth, matrix_width), dtype=np.uint8)
    doffset = 0
    for line in Matrix:
       woffset = 0
@@ -216,7 +209,7 @@ def koutofk_to3D_Matrix(k, Matrix):
          # pixelTime = time.time()
          #choose a permutation randomly of either S0 or S1
          # matrixTime = time.time()
-         if pixel == 0:
+         if pixel == 1:
             out = permuteMatrix(s0)
          else:
             out = permuteMatrix(s1)
@@ -226,7 +219,7 @@ def koutofk_to3D_Matrix(k, Matrix):
             pos = 0
             for depth in range(doffset, doffset + side_len):
                for width in range(woffset, woffset + side_len):
-                  #print("i, woffset, depth, width, subpixel:",i,woffset,depth,width,subpixel)
+                  #print("i, woffset, depth, width, subpixel:",i,woffset,depth,width,out[i][pos])
                   outMatrix[i][depth][width] = out[i][pos]
                   pos += 1
          woffset += side_len
@@ -252,7 +245,7 @@ def toImage(k):
    # print("num_lines", num_lines)
    num_pixels = len(shares[0].readline())/length
    shares[0].seek(0,0)
-   Matrix = [[0] * num_pixels for x in range(num_lines)]
+   Matrix = np.zeros((num_lines, num_pixels), dtype=np.uint8)
    for i in range(0, num_lines):
       lines = [object] * k
       for x in range(0, k):
@@ -267,7 +260,7 @@ def toImage(k):
             #if there's a single matching of all white subpixels than the pixel must be white
             w = True
             for line in lines:
-               if line[x] != "0":
+               if line[x] != "1":
                   w = False
             if w:
                white=True
@@ -281,18 +274,68 @@ def toImage(k):
          #TODO: for generating the image, what is the proper format? -> 2D array
          # print(i, beg/length, end="")
          if(white):
-            Matrix[i][beg/length] = 0
+            Matrix[i][beg/length] = 1
             # print("-> 0")
          else:
-            Matrix[i][beg/length] = 1
+            Matrix[i][beg/length] = 0
             # print("-> 1")
          beg += length
    # print("Shares -> pixels took:", time.time() - startTime)
    return Matrix
-   #accept commandline input: kofk.py k k image
 
 
+def toImage_fr3D(k, Matrix):
+   #set up the output Matrix which will be the dimensions of the original matrix
+   subpixels = 2 << ((k-1) /2) - 1
+   num_pixels = sum(1 for subpixel in Matrix[0][0])/subpixels
+   num_lines = sum(1 for subpixel in Matrix[0]) /subpixels
+   outMatrix = np.zeros((num_lines, num_pixels), dtype=np.uint8)
+   #Calculate the value of each pixel by combining squares of subpixels between the shares
+   for i in range(num_lines):
+      for j in range(num_pixels):
+         white = False
+         for depth in range(i*subpixels, (i+1)*subpixels):
+            for width in range(j*subpixels, (j+1)*subpixels):
+               w = True
+               for share in Matrix:
+                  # Can be used with 0 or 1 or with 0 or 255 images
+                  if not(share[depth][width] == 1 or share[depth][width] == 255):
+                     w = False
+               if w:
+                  white = True
+         if white:
+            outMatrix[i][j] = 1
+         else:
+            outMatrix[i][j] = 0
+   return outMatrix
+      # beg = 0 #The first digit of a share
 
+      # while beg < len(lines[0]):
+      #    white=False
+      #    for x in range(beg, beg + length):
+      #       #if there's a single matching of all white subpixels than the pixel must be white
+      #       w = True
+      #       for line in lines:
+      #          if line[x] != "0":
+      #             w = False
+      #       if w:
+      #          white=True
+      #    #print results out to console
+      #       #Prints out in as 0 or 1 in the place where that pixel would be in the image
+      #       #ie
+      #       #  100
+      #       #  011
+      #       #  101
+      #       #for a image that is 3x3 pixels
+      #    #TODO: for generating the image, what is the proper format? -> 2D array
+      #    # print(i, beg/length, end="")
+      #    if(white):
+      #       Matrix[i][beg/length] = 0
+      #       # print("-> 0")
+      #    else:
+      #       Matrix[i][beg/length] = 1
+      #       # print("-> 1")
+      #    beg += length
 
 
 
@@ -309,15 +352,17 @@ def toImage(k):
 
 
 ###MAIN###
-k = 3
-fakepic = [[0,1,1,1],[0,1,1,0],[0,1,0,1],[1,0,0,0]]
+# k = 15
+# fakepic = [[0,1,1,1],[0,1,1,0],[0,1,0,1],[1,0,0,0]]
 
 # If you want to put shares into an image
-Matrix = koutofk_to3D_Matrix(k, fakepic)
-for share in Matrix:
-   for line in share:
-      print(line)
-   print()
+# Matrix = koutofk_to3D_Matrix(k, fakepic)
+# # for share in Matrix:
+# #    for line in share:
+# #       print(line)
+# #    print()
+# Matrix = toImage_fr3D(k, Matrix)
+# print(Matrix)
 
 # If you want to put shares in files
 # koutofk(k, fakepic)
