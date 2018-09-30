@@ -150,7 +150,7 @@ def koutofk (k, Matrix):
       shares[i] = open("share" + str(i), "w")
 
    # print("Creating files took:", time.time() - startTime)
-   #convert a 2D array to k shares and write those shares to files
+   # convert a 2D array to k shares and write those shares to files
    # startTime = time.time()
 
    for line in Matrix:
@@ -159,11 +159,11 @@ def koutofk (k, Matrix):
          #choose a permutation randomly of either S0 or S1
          # matrixTime = time.time()
          if pixel == 1:
-            out = permuteMatrix(s0)
+            out = permuteMatrix(s0) # white pixel
          else:
-            out = permuteMatrix(s1)
+            out = permuteMatrix(s1) # black pixel
          # print("time to permutate:", time.time() - matrixTime)
-         #distribute the permutation among the shares
+         # distribute the permutation among the shares
          for i in range(0, k):
             for subpixel in out[i]:
                shares[i].write(str(subpixel))
@@ -210,9 +210,9 @@ def koutofk_to3D_Matrix(k, Matrix):
          #choose a permutation randomly of either S0 or S1
          # matrixTime = time.time()
          if pixel == 1:
-            out = permuteMatrix(s0)
+            out = permuteMatrix(s0) # white pixel
          else:
-            out = permuteMatrix(s1)
+            out = permuteMatrix(s1) # black pixel
          # print("time to permutate:", time.time() - matrixTime)
          #distribute the permutation among the shares
          for i in range(0, k):
@@ -283,6 +283,22 @@ def toImage(k):
    # print("Shares -> pixels took:", time.time() - startTime)
    return Matrix
 
+def stack_images(Images):
+   #set up the output Matrix which will be the dimensions of the original matrix
+   num_pixels = sum(1 for subpixel in Images[0][0])
+   num_lines = sum(1 for subpixel in Images[0])
+   outMatrix = np.zeros((num_lines, num_pixels), dtype=np.uint8)
+   for line in range(0, num_lines):
+      for pixel in range(0, num_pixels):
+         white = True
+         for image in Images:
+            if image[line][pixel] == 0:
+               white = False
+         if white:
+            outMatrix[line][pixel] = 1
+         else:
+            outMatrix[line][pixel] = 0
+   return outMatrix
 
 def toImage_fr3D(k, Matrix):
    #set up the output Matrix which will be the dimensions of the original matrix
@@ -299,7 +315,7 @@ def toImage_fr3D(k, Matrix):
                w = True
                for share in Matrix:
                   # Can be used with 0 or 1 or with 0 or 255 images
-                  if not(share[depth][width] == 1 or share[depth][width] == 255):
+                  if share[depth][width] == 0:
                      w = False
                if w:
                   white = True

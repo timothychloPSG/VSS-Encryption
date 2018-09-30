@@ -8,15 +8,6 @@ from array import array
 from PIL import Image
 import kofk
 
-parser = argparse.ArgumentParser(description = 'Runs VSS-encryption')
-parser.add_argument('-s', help = 'split', action = 'store_true', default = False)
-parser.add_argument('-r', help = 'reconstruct', action = 'store_true', default = False)
-parser.add_argument('-i', help = 'input files', nargs = '+')
-parser.add_argument('-o', help = 'output files (if not specified, stdout)', nargs = '+')
-# parser.add_argument('-p', help = 'Print out the bit array', action = 'store_true', default = False)
-args = parser.parse_args()
-
-
 def image_to_bits(image):
 	print 	"Image info:"
 	print 	"""Number of bits: %d,  Image Size: %s,  Image format: %s""" %(image.bits, image.size, image.format)
@@ -69,7 +60,7 @@ def paste_images(background, foreground):
 def from_2D_to_img(Matrix):
 	for row in range(len(Matrix)):
 		for pixel in range(len(Matrix[row])):
-			if Matrix[row][pixel] == 1:
+			if Matrix[row][pixel] == 1: #used to be that 0 was black and 1 was white
 				Matrix[row][pixel] = 255
 			# elif Matrix[row][pixel] == 1:
 			# 	Matrix[row][pixel] = 0
@@ -87,8 +78,15 @@ def make_2D_array(data,ratio):
 
 if __name__ == '__main__':
 	# import pdb; pdb.set_trace()
+	parser = argparse.ArgumentParser(description = 'Runs VSS-encryption')
+	parser.add_argument('-s', help = 'split', action = 'store_true', default = False)
+	parser.add_argument('-r', help = 'reconstruct', action = 'store_true', default = False)
+	parser.add_argument('image', help = 'input files', nargs = '+')
+	parser.add_argument('-o', dest='outImage', help = 'output files (if not specified, stdout)', nargs = '+')
+	# parser.add_argument('-p', help = 'Print out the bit array', action = 'store_true', default = False)
+	args = parser.parse_args()
 	k = 3
-	inp = Image.open(args.i[0])										# Open image
+	inp = Image.open(args.image[0])										# Open image
 	out = image_to_bits(inp)										# Convert to bits
 	flip_bits(out)
 	Matrix = make_2D_array(out,inp.size)
@@ -101,6 +99,16 @@ if __name__ == '__main__':
 	imwrite('result.jpg', outMatrix)
 	from_2D_to_img(Matrix)
 	imwrite('beforeShare.jpg', Matrix)
+
+	Stacked2 = [shares[0], shares[1]]
+	outMatrix = kofk.stack_images(shares)
+	from_2D_to_img(outMatrix)
+	imwrite('stacked.jpg', outMatrix)
+
+	outMatrix = kofk.stack_images(Stacked2)
+	from_2D_to_img(outMatrix)
+	imwrite('stacked2.jpg', outMatrix)
+
 	# if args.s:
 	# 	inp = Image.open(args.i[0])										# Open image
 	# 	out = image_to_bits(inp)										# Convert to bits
