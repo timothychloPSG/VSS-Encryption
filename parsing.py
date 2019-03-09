@@ -100,14 +100,14 @@ if __name__ == '__main__':
 	from_2D_to_img(Matrix)
 	imwrite('beforeShare.jpg', Matrix)
 
-	Stacked2 = [shares[0], shares[1]]
+	# Stacked2 = [shares[0], shares[1]]
 	outMatrix = kofk.stack_images(shares)
 	from_2D_to_img(outMatrix)
 	imwrite('stacked.jpg', outMatrix)
 
-	outMatrix = kofk.stack_images(Stacked2)
-	from_2D_to_img(outMatrix)
-	imwrite('stacked2.jpg', outMatrix)
+	# outMatrix = kofk.stack_images(Stacked2)
+	# from_2D_to_img(outMatrix)
+	# imwrite('stacked2.jpg', outMatrix)
 
 	# if args.s:
 	# 	inp = Image.open(args.i[0])										# Open image
